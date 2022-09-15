@@ -1,0 +1,12 @@
+disk\Application.class
+disk\web\DeleteController.class
+disk\web\HistoryController.class
+disk\Errors\NotFound.class
+disk\db\ItemsRepository.class
+disk\web\DiskController.class
+disk\web\UpdateController.class
+disk\ItemHistory.class
+disk\Utils.class
+disk\Item.class
+disk\db\ItemsHistoryRepository.class
+disk\Errors\NotValid.class

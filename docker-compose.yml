@@ -1,0 +1,27 @@
+version: '2'
+
+services:
+  disk:
+    build: .
+    ports:
+      - 0.0.0.0:80:8080
+    container_name: disk
+    restart: always
+    depends_on:
+      - db
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/item
+      - SPRING_DATASOURCE_USERNAME=postgres
+      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+
+  db:
+    image: 'postgres:latest'
+    container_name: db
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=item
+    volumes:
+      - /home/ubuntu/db:/var/lib/postgresql/data
