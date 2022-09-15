@@ -13,9 +13,7 @@ import disk.db.ItemsHistoryRepository;
 import disk.db.ItemsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -60,15 +58,17 @@ public class DiskController {
             // process date
             date = Utils.getDate(stringDate);
 
-            // process items
+            // check items
+            List<Item> items = new ArrayList<Item>();
+            List<ItemHistory> itemsh = new ArrayList<ItemHistory>();
             for (JsonNode s : jsonNode.get("items")) {
                 Item item = objectMapper.treeToValue(s, Item.class);
                 ItemHistory itemHistory = objectMapper.treeToValue(s, ItemHistory.class);
                 item.setDate(stringDate);
                 item.setData(date);
+
                 itemHistory.setDate(stringDate);
                 itemHistory.setData(date);
-
                 // valid check
                 if (item.getData() == null)
                     throw new Exception();
@@ -77,9 +77,22 @@ public class DiskController {
                 else
                     throw new Exception();
                 if (item.getId() == null || !item.check()) throw new Exception();
-                if (item.getParentId() != null)
-                    if (!itemsRepository.findById(item.getParentId()).orElse(null).Folder())
-                        throw new Exception();
+                if (item.getParentId() != null) {
+                    if(itemsRepository.existsById(item.getParentId())) {
+                        if (!itemsRepository.findById(item.getParentId()).orElse(null).Folder())
+                            throw new Exception();
+                    }
+                    else{
+                        Item parent = new Item();
+                        for (Item i: items) {
+                            if (i.getId().equals(item.getParentId()))
+                                parent = i;
+                        }
+                        if(!parent.Folder())
+                            throw new Exception();
+                    }
+                }
+
                 if (item.Folder()) {
                     if (item.getUrl() != null || item.getSize() != null) {
                         throw new Exception();
@@ -90,24 +103,40 @@ public class DiskController {
                     if (item.getUrl() != null)
                         if (item.getUrl().length() > 255)
                             throw new Exception();
-                    if (item.getSize() <= 0 || item.getSize() == null){
+
+                    if (item.getSize() <= 0 || item.getSize() == null) {
+                        throw new Exception();
+                    }
+                }
+                if (itemsRepository.existsById(item.getId())) {
+                    Item y = itemsRepository.findById(item.getId()).orElse(null);
+                    if (!y.getType().equals(item.getType())) {
                         throw new Exception();
                     }
                 }
 
+                items.add(item);
+                itemsh.add(itemHistory);
+            }
+            // process items
+
+            for (int i = 0; i<items.size(); i+=1) {
+                Item item = items.get(i);
+                ItemHistory itemHistory = itemsh.get(i);
+
                 // update item
-                if (itemsRepository.existsById(s.get("id").asText())) {
-                    Item y = itemsRepository.findById(s.get("id").asText()).orElse(null);
+                if (itemsRepository.existsById(item.getId())){
+                    Item y = itemsRepository.findById(item.getId()).orElse(null);
                     itemsRepository.deleteById(y.getId());
-                    if (!y.getType().equals(item.getType())) {throw new Exception();}
                     if (item.getParentId() != null) {
                         resize(item.getParentId(), item.getSize() - y.getSize(),
                                 item.getDate());
                     }
                     itemsRepository.save(y);
+
                 // new item
                 } else {
-                    if (item.getParentId() != null && !(item.Folder())) {
+                    if (item.getParentId() != null) {
                         resize(item.getParentId(), item.getSize(), item.getDate());
                     }
                     itemsRepository.save(item);

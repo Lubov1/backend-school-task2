@@ -18,7 +18,6 @@ import org.joda.time.DateTime;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
@@ -28,9 +27,7 @@ public class UpdateController {
     ObjectMapper objectMapper = new ObjectMapper();
     @Autowired
     private ItemsRepository itemsRepository;
-//    public ItemsRepository getItemsRepository() {
-//        return itemsRepository;
-//    }
+
     public UpdateController(ItemsRepository itemsRepository) {
         this.itemsRepository = itemsRepository;
     }
@@ -57,9 +54,7 @@ public class UpdateController {
 
             for (Item i: upd) {
                 JsonNode node = objectMapper.readTree(objectMapper.writeValueAsString(i));
-                System.out.println("/upd4");
                 ((ObjectNode)node).remove("data");
-                System.out.println("/upd5");
                 items.add(node);
             }
             response.put("items", items);

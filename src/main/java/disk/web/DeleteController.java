@@ -64,7 +64,7 @@ public class DeleteController {
             }
             Item item = itemsRepository.findById(id).orElseThrow(() -> new NullPointerException());
             if (item.getParentId() != null) {
-                resize(item.getParentId(), item.getSize(), stringDate);
+                resize(item.getParentId(), -item.getSize(), stringDate);
             }
             delete(item);
 
